@@ -125,37 +125,51 @@ export class App implements OnDestroy {
     void context?.close();
   }
 
-  setCount(line: 'c' | 'g', event: Event): void {
+  setCount(line: 'c' | 'g', event: Event, commit = false): void {
     const input = event.target as HTMLInputElement;
+    if (input.value.trim() === '') {
+      if (commit) input.value = String((line === 'c' ? this.cCount : this.gCount)());
+      return;
+    }
     const value = Number(input.value);
-    if (!Number.isFinite(value)) return;
+    if (!Number.isFinite(value)) {
+      if (commit) input.value = String((line === 'c' ? this.cCount : this.gCount)());
+      return;
+    }
 
     const count = Math.min(16, Math.max(1, Math.round(value)));
     const selectedCount = line === 'c' ? this.cCount : this.gCount;
     if (count !== selectedCount()) {
-      this.stopPlayback();
-      this.cPhase = 0;
-      this.gPhase = 0;
+      const previousOffset = this.cPhaseOffset();
+      this.lastFrame = performance.now();
+      selectedCount.set(count);
+      this.cPhase += previousOffset - this.cPhaseOffset();
+      this.playbackTicks = 0;
+      this.trailStartCPhase = this.cPhase;
+      this.trailStartGPhase = this.gPhase;
       this.trailPath.set('');
     }
-    selectedCount.set(count);
     this.updateBallPositions();
-    input.value = String(count);
+    if (commit) input.value = String(count);
   }
 
   setTicks(event: Event): void {
     const ticks = Number((event.target as HTMLInputElement).value);
-    if (ticks !== this.ticks()) this.stopPlayback();
+    if (ticks !== this.ticks()) this.lastFrame = performance.now();
     this.ticks.set(ticks);
   }
 
-  setTicksInput(event: Event): void {
+  setTicksInput(event: Event, commit = false): void {
     const input = event.target as HTMLInputElement;
+    if (input.value.trim() === '') {
+      if (commit) input.value = String(this.ticks());
+      return;
+    }
     const value = Number(input.value);
     const ticks = Number.isFinite(value) ? Math.min(512, Math.max(2, Math.round(value))) : this.ticks();
-    if (ticks !== this.ticks()) this.stopPlayback();
+    if (ticks !== this.ticks()) this.lastFrame = performance.now();
     this.ticks.set(ticks);
-    input.value = String(ticks);
+    if (commit) input.value = String(ticks);
   }
 
   setVolume(event: Event): void {

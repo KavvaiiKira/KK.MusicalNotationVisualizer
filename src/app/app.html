@@ -7,12 +7,12 @@
       <span class="ratio-parenthesis">(</span>
       <label class="ratio-field">
         <span>G</span>
-        <input type="number" min="1" max="16" [value]="gCount()" (input)="stopPlayback()" (change)="setCount('g', $event)" [attr.aria-label]="copy().gCountLabel" />
+        <input type="number" min="1" max="16" [value]="gCount()" (input)="setCount('g', $event)" (change)="setCount('g', $event, true)" [attr.aria-label]="copy().gCountLabel" />
       </label>
       <span class="ratio-colon">:</span>
       <label class="ratio-field">
         <span>C</span>
-        <input type="number" min="1" max="16" [value]="cCount()" (input)="stopPlayback()" (change)="setCount('c', $event)" [attr.aria-label]="copy().cCountLabel" />
+        <input type="number" min="1" max="16" [value]="cCount()" (input)="setCount('c', $event)" (change)="setCount('c', $event, true)" [attr.aria-label]="copy().cCountLabel" />
       </label>
       <span class="ratio-parenthesis">)</span>
     </div>
@@ -64,7 +64,7 @@
       <span class="control-heading">
         <span>{{ copy().speed }}</span>
         <span class="speed-value">
-          <input type="number" min="2" max="512" step="1" [value]="ticks()" (input)="stopPlayback()" (change)="setTicksInput($event)" [attr.aria-label]="copy().speedInputLabel" />
+          <input type="number" min="2" max="512" step="1" [value]="ticks()" (input)="setTicksInput($event)" (change)="setTicksInput($event, true)" [attr.aria-label]="copy().speedInputLabel" />
           <small>{{ copy().ticksUnit }}</small>
         </span>
       </span>
