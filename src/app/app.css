@@ -1,0 +1,116 @@
+:host { display: block; min-height: 100vh; }
+
+.app-shell {
+  width: min(1180px, calc(100% - 48px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 48px 0 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.page-header { text-align: center; }
+.section-label, .control-heading > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+h1 { margin: 0; color: var(--accent); font-size: clamp(16px, 3.1vw, 38px); font-weight: 600; letter-spacing: -.035em; white-space: nowrap; }
+.subtitle { margin: 9px 0 25px; color: var(--muted); font-size: 15px; }
+.ratio-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.ratio-parenthesis, .ratio-colon { line-height: 1; color: var(--accent); }
+.ratio-parenthesis { font-size: 64px; transform: translateY(8px); }
+.ratio-colon { font-size: 36px; }
+.ratio-colon { padding: 0 3px; transform: translateY(10px); }
+.ratio-field { display: flex; flex-direction: column; gap: 5px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.ratio-field input {
+  width: 70px; height: 58px; padding: 0 4px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--raised); color: var(--text);
+  font: 600 28px 'Exo 2', sans-serif; text-align: center;
+  appearance: textfield;
+}
+.ratio-field input::-webkit-inner-spin-button, .ratio-field input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.ratio-field input:focus-visible { outline: 2px solid var(--primary-hover); outline-offset: 3px; }
+
+.visualizer {
+  flex: 0 0 auto; min-height: 360px;
+  border: 1px solid var(--border); border-radius: 16px;
+  background: radial-gradient(circle at 55% 18%, #211735 0, var(--surface) 48%, #100c1b 100%);
+  box-shadow: 0 22px 80px #0003, inset 0 1px #ffffff08;
+  overflow: hidden;
+}
+.visualizer-topline { display: flex; align-items: center; justify-content: space-between; padding: 23px 28px 0; }
+.section-label { display: flex; align-items: center; gap: 10px; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.live-dot.active { background: var(--success); box-shadow: 0 0 12px var(--success); }
+.play-button {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 132px; height: 42px; padding: 0 18px;
+  border: 0; border-radius: 9px; background: var(--primary); color: white;
+  font: 600 14px 'Exo 2', sans-serif; cursor: pointer;
+  transition: background .15s, transform .15s;
+}
+.play-button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.play-button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.rhythm-stage { display: block; width: min(100%, 900px); height: auto; margin: -6px auto 12px; }
+.guide-line { stroke: #3b2b5a; stroke-width: 14; stroke-linecap: round; opacity: .4; }
+.main-line { stroke: #a78bfa; stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 5px #8b5cf6); }
+.shadow-trail { fill: none; stroke: #e9d5ff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .82; filter: drop-shadow(0 0 5px #c084fc); }
+.shadow-link { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 7 9; opacity: .6; }
+.shadow-glow { fill: var(--accent); opacity: .55; }
+.shadow-ball { fill: var(--accent); stroke: var(--text); stroke-width: 2; }
+.center-mark { stroke: var(--text); stroke-width: 3; stroke-linecap: round; }
+.center-point { fill: var(--text); }
+.ball-glow { fill: #a78bfa; opacity: .8; }
+.g-glow { fill: #c084fc; }
+.ball { fill: var(--text); stroke: var(--primary-hover); stroke-width: 5; }
+.g-ball { stroke: var(--accent); }
+.line-name { fill: var(--text); font: 600 29px 'Exo 2', sans-serif; }
+
+.controls { display: flex; justify-content: space-between; gap: 24px; margin-top: auto; }
+.control-card {
+  width: min(370px, 100%); padding: 19px 22px 15px;
+  border: 1px solid var(--border); border-radius: 14px;
+  background: var(--surface);
+}
+.control-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.control-heading strong { color: var(--text); font-size: 20px; white-space: nowrap; }
+.control-heading small { color: var(--muted); font-size: 12px; font-weight: 500; }
+.speed-value { display: inline-flex; align-items: baseline; gap: 5px; white-space: nowrap; }
+.speed-value input {
+  width: 65px; height: 34px; padding: 0 6px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--raised); color: var(--text);
+  font: 600 20px 'Exo 2', sans-serif; text-align: center;
+  appearance: textfield;
+}
+.speed-value input::-webkit-inner-spin-button, .speed-value input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.speed-value input:focus-visible { outline: 2px solid var(--primary-hover); outline-offset: 2px; }
+.control-card input[type='range'] { display: block; width: 100%; height: 6px; margin: 0; accent-color: var(--primary); cursor: pointer; }
+.control-card input[type='range']:focus-visible { outline: 2px solid var(--primary-hover); outline-offset: 6px; }
+.range-limits { display: flex; justify-content: space-between; margin-top: 10px; color: var(--muted); font-size: 11px; }
+.language-button {
+  position: fixed; right: 20px; bottom: 18px; z-index: 2;
+  min-width: 46px; height: 38px; padding: 0 9px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--raised); color: var(--text);
+  font: 600 13px 'Exo 2', sans-serif; cursor: pointer;
+}
+.language-button:hover { background: #281c40; }
+.language-button:focus-visible { outline: 2px solid var(--primary-hover); outline-offset: 3px; }
+
+@media (max-width: 700px) {
+  .app-shell { width: min(100% - 28px, 520px); min-height: auto; padding-top: 28px; gap: 18px; }
+  .subtitle { margin-bottom: 18px; }
+  .visualizer { min-height: 280px; }
+  .visualizer-topline { padding: 16px 16px 0; }
+  .section-label { font-size: 9px; letter-spacing: .08em; }
+  .play-button { min-width: 105px; padding: 0 12px; }
+  .rhythm-stage { margin: 12px auto 8px; }
+  .controls { flex-direction: column; gap: 12px; margin-top: 0; }
+  .control-card { width: 100%; }
+  .language-button { right: 14px; bottom: 14px; }
+}

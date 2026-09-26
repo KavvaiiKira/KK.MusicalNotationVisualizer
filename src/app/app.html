@@ -1,0 +1,81 @@
+<main class="app-shell">
+  <header class="page-header">
+    <h1>KK.MusicalNotationVisualizer</h1>
+    <p class="subtitle">{{ copy().subtitle }}</p>
+
+    <div class="ratio-row" [attr.aria-label]="copy().ratioLabel">
+      <span class="ratio-parenthesis">(</span>
+      <label class="ratio-field">
+        <span>G</span>
+        <input type="number" min="1" max="16" [value]="gCount()" (input)="stopPlayback()" (change)="setCount('g', $event)" [attr.aria-label]="copy().gCountLabel" />
+      </label>
+      <span class="ratio-colon">:</span>
+      <label class="ratio-field">
+        <span>C</span>
+        <input type="number" min="1" max="16" [value]="cCount()" (input)="stopPlayback()" (change)="setCount('c', $event)" [attr.aria-label]="copy().cCountLabel" />
+      </label>
+      <span class="ratio-parenthesis">)</span>
+    </div>
+  </header>
+
+  <section class="visualizer" [attr.aria-label]="copy().stageLabel">
+    <div class="visualizer-topline">
+      <span class="section-label"><span class="live-dot" [class.active]="running()"></span> {{ running() ? copy().playing : copy().ready }}</span>
+      <button class="play-button" type="button" (click)="togglePlayback()">
+        {{ running() ? copy().stop : copy().start }}
+      </button>
+    </div>
+
+    <svg class="rhythm-stage" viewBox="0 0 1000 750" role="img" [attr.aria-label]="copy().linesLabel">
+      <defs>
+        <filter id="ball-glow" x="-150%" y="-150%" width="400%" height="400%">
+          <feGaussianBlur stdDeviation="9" />
+        </filter>
+      </defs>
+
+      <line class="guide-line" x1="220" y1="50" x2="780" y2="50" />
+      <line class="guide-line" x1="150" y1="100" x2="150" y2="660" />
+      <line class="main-line" x1="220" y1="50" x2="780" y2="50" />
+      <line class="main-line" x1="150" y1="100" x2="150" y2="660" />
+
+      <path class="shadow-trail" [attr.d]="trailPath()" />
+      <line class="shadow-link" [attr.x1]="cPosition()" y1="50" [attr.x2]="cPosition()" [attr.y2]="gPosition()" />
+      <line class="shadow-link" x1="150" [attr.y1]="gPosition()" [attr.x2]="cPosition()" [attr.y2]="gPosition()" />
+      <circle class="shadow-glow" [attr.cx]="cPosition()" [attr.cy]="gPosition()" r="18" filter="url(#ball-glow)" />
+      <circle class="shadow-ball" [attr.cx]="cPosition()" [attr.cy]="gPosition()" r="9" />
+
+      <line class="center-mark" x1="500" y1="35" x2="500" y2="65" />
+      <line class="center-mark" x1="135" y1="380" x2="165" y2="380" />
+      <circle class="center-point" cx="500" cy="50" r="4" />
+      <circle class="center-point" cx="150" cy="380" r="4" />
+
+      <circle class="ball-glow" [attr.cx]="cPosition()" cy="50" r="22" filter="url(#ball-glow)" />
+      <circle class="ball c-ball" [attr.cx]="cPosition()" cy="50" r="12" />
+      <circle class="ball-glow g-glow" cx="150" [attr.cy]="gPosition()" r="22" filter="url(#ball-glow)" />
+      <circle class="ball g-ball" cx="150" [attr.cy]="gPosition()" r="12" />
+
+      <text class="line-name" x="815" y="58">C</text>
+      <text class="line-name" x="150" y="722" text-anchor="middle">G</text>
+    </svg>
+  </section>
+
+  <footer class="controls">
+    <label class="control-card">
+      <span class="control-heading">
+        <span>{{ copy().speed }}</span>
+        <span class="speed-value">
+          <input type="number" min="2" max="512" step="1" [value]="ticks()" (input)="stopPlayback()" (change)="setTicksInput($event)" [attr.aria-label]="copy().speedInputLabel" />
+          <small>{{ copy().ticksUnit }}</small>
+        </span>
+      </span>
+      <input type="range" min="2" max="512" step="1" [value]="ticks()" (input)="setTicks($event)" [attr.aria-label]="copy().speedLabel" />
+      <span class="range-limits"><span>2</span><span>512</span></span>
+    </label>
+    <label class="control-card">
+      <span class="control-heading"><span>{{ copy().volume }}</span><strong>{{ volume() }} <small>%</small></strong></span>
+      <input type="range" min="0" max="100" step="1" [value]="volume()" (input)="setVolume($event)" [attr.aria-label]="copy().volumeLabel" />
+      <span class="range-limits"><span>0</span><span>100</span></span>
+    </label>
+  </footer>
+  <button class="language-button" type="button" (click)="toggleLocale()" [attr.aria-label]="copy().languageLabel">{{ locale().toUpperCase() }}</button>
+</main>

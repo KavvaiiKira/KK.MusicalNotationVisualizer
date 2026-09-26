@@ -1,0 +1,24 @@
+@font-face {
+  font-family: 'Exo 2';
+  src: url('/fonts/Exo2-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --background: #0c0814;
+  --surface: #151022;
+  --raised: #1d1530;
+  --border: #3b2b5a;
+  --primary: #8b5cf6;
+  --primary-hover: #a78bfa;
+  --accent: #c084fc;
+  --text: #f4f0ff;
+  --muted: #a99ebe;
+  --success: #4ade80;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--background); }
+body { margin: 0; min-width: 320px; color: var(--text); background: var(--background); font-family: 'Exo 2', sans-serif; }
