@@ -3,8 +3,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, computed, signal } from 
 type Locale = 'ru' | 'en';
 const APP_TITLE = 'KK.MusicalNotationVisualizer';
 const G_TO_C_FREQUENCY_RATIO = 2 ** (-5 / 12);
-const C_FREQUENCY = 262;
-const G_FREQUENCY = C_FREQUENCY * G_TO_C_FREQUENCY_RATIO;
+const MIN_AUDIBLE_FREQUENCY = 20;
 const SUSTAIN_THRESHOLD = 30;
 const TRAIL_SAMPLES_PER_PERIOD = 256;
 const RATIO_TRANSITION_MS = 220;
@@ -80,8 +79,9 @@ export class App implements OnDestroy {
   private lastFrame = 0;
   private frameId = 0;
   private audioContext?: AudioContext;
-  private sustainedC?: GainNode;
-  private sustainedG?: GainNode;
+  private sustainedC?: { oscillator: OscillatorNode; gain: GainNode };
+  private sustainedG?: { oscillator: OscillatorNode; gain: GainNode };
+  private activeTones = new Set<{ oscillator: OscillatorNode; line: 'c' | 'g' }>();
   private playbackTicks = 0;
   private trailStartCPhase = 0;
   private trailStartGPhase = 0;
@@ -126,6 +126,7 @@ export class App implements OnDestroy {
     this.audioContext = undefined;
     this.sustainedC = undefined;
     this.sustainedG = undefined;
+    this.activeTones.clear();
     void context?.close();
   }
 
@@ -164,8 +165,7 @@ export class App implements OnDestroy {
 
   setTicks(event: Event): void {
     const ticks = Number((event.target as HTMLInputElement).value);
-    if (ticks !== this.ticks()) this.lastFrame = performance.now();
-    this.ticks.set(ticks);
+    this.updateTicks(ticks);
   }
 
   setTicksInput(event: Event, commit = false): void {
@@ -176,9 +176,16 @@ export class App implements OnDestroy {
     }
     const value = Number(input.value);
     const ticks = Number.isFinite(value) ? Math.min(512, Math.max(2, Math.round(value))) : this.ticks();
-    if (ticks !== this.ticks()) this.lastFrame = performance.now();
-    this.ticks.set(ticks);
+    this.updateTicks(ticks);
     if (commit) input.value = String(ticks);
+  }
+
+  private updateTicks(ticks: number): void {
+    if (ticks === this.ticks()) return;
+    this.lastFrame = performance.now();
+    this.ticks.set(ticks);
+    this.updateToneFrequencies();
+    this.updateSustainedTones();
   }
 
   setVolume(event: Event): void {
@@ -201,8 +208,8 @@ export class App implements OnDestroy {
     const nextGPhase = this.trailStartGPhase + this.playbackTicks * this.gCount() / 4;
 
     this.updateSustainedTones();
-    this.playCrossings(C_FREQUENCY, this.cCount(), this.cPhase, nextCPhase, this.cPhaseOffset(), elapsed);
-    this.playCrossings(G_FREQUENCY, this.gCount(), this.gPhase, nextGPhase, 0, elapsed);
+    this.playCrossings('c', this.cCount(), this.cPhase, nextCPhase, this.cPhaseOffset(), elapsed);
+    this.playCrossings('g', this.gCount(), this.gPhase, nextGPhase, 0, elapsed);
 
     this.cPhase = nextCPhase;
     this.gPhase = nextGPhase;
@@ -267,14 +274,14 @@ export class App implements OnDestroy {
   private startAudio(): void {
     const context = new AudioContext();
     this.audioContext = context;
-    this.sustainedC = this.createSustainedTone(context, C_FREQUENCY);
-    this.sustainedG = this.createSustainedTone(context, G_FREQUENCY);
+    this.sustainedC = this.createSustainedTone(context, this.lineFrequency('c'));
+    this.sustainedG = this.createSustainedTone(context, this.lineFrequency('g'));
     this.sustainedCLevel = 0;
     this.sustainedGLevel = 0;
     void context.resume();
   }
 
-  private createSustainedTone(context: AudioContext, frequency: number): GainNode {
+  private createSustainedTone(context: AudioContext, frequency: number): { oscillator: OscillatorNode; gain: GainNode } {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     oscillator.type = 'sine';
@@ -283,7 +290,24 @@ export class App implements OnDestroy {
     oscillator.connect(gain);
     gain.connect(context.destination);
     oscillator.start();
-    return gain;
+    return { oscillator, gain };
+  }
+
+  private lineFrequency(line: 'c' | 'g'): number {
+    return this.ticks() * (line === 'c' ? 1 : G_TO_C_FREQUENCY_RATIO);
+  }
+
+  private updateToneFrequencies(): void {
+    const context = this.audioContext;
+    if (!context) return;
+
+    const now = context.currentTime;
+    const ramp = 0.025;
+    this.sustainedC?.oscillator.frequency.setTargetAtTime(this.lineFrequency('c'), now, ramp);
+    this.sustainedG?.oscillator.frequency.setTargetAtTime(this.lineFrequency('g'), now, ramp);
+    for (const tone of this.activeTones) {
+      tone.oscillator.frequency.setTargetAtTime(this.lineFrequency(tone.line), now, ramp);
+    }
   }
 
   private updateSustainedTones(): void {
@@ -291,31 +315,31 @@ export class App implements OnDestroy {
     if (!context) return;
 
     const level = (this.volume() / 100) * 0.09;
-    const cLevel = this.ticks() * this.cCount() / 4 >= SUSTAIN_THRESHOLD ? level : 0;
-    const gLevel = this.ticks() * this.gCount() / 4 >= SUSTAIN_THRESHOLD ? level : 0;
+    const cLevel = this.lineFrequency('c') >= MIN_AUDIBLE_FREQUENCY && this.ticks() * this.cCount() / 4 >= SUSTAIN_THRESHOLD ? level : 0;
+    const gLevel = this.lineFrequency('g') >= MIN_AUDIBLE_FREQUENCY && this.ticks() * this.gCount() / 4 >= SUSTAIN_THRESHOLD ? level : 0;
     if (cLevel !== this.sustainedCLevel) {
-      this.sustainedC?.gain.setTargetAtTime(cLevel, context.currentTime, 0.02);
+      this.sustainedC?.gain.gain.setTargetAtTime(cLevel, context.currentTime, 0.02);
       this.sustainedCLevel = cLevel;
     }
     if (gLevel !== this.sustainedGLevel) {
-      this.sustainedG?.gain.setTargetAtTime(gLevel, context.currentTime, 0.02);
+      this.sustainedG?.gain.gain.setTargetAtTime(gLevel, context.currentTime, 0.02);
       this.sustainedGLevel = gLevel;
     }
   }
 
-  private playCrossings(frequency: number, count: number, previous: number, next: number, offset: number, elapsed: number): void {
+  private playCrossings(line: 'c' | 'g', count: number, previous: number, next: number, offset: number, elapsed: number): void {
     const crossingRate = this.ticks() * count / 4;
-    if (crossingRate >= SUSTAIN_THRESHOLD) return;
+    if (crossingRate >= SUSTAIN_THRESHOLD || this.lineFrequency(line) < MIN_AUDIBLE_FREQUENCY) return;
 
     const crossings = Math.floor(next + offset) - Math.floor(previous + offset);
     const duration = Math.min(0.24, Math.max(0.06, (1 / crossingRate) * 0.55));
 
     for (let index = 0; index < crossings; index++) {
-      this.playTone(frequency, duration, (index / crossings) * elapsed);
+      this.playTone(line, duration, (index / crossings) * elapsed);
     }
   }
 
-  private playTone(frequency: number, duration: number, delay: number): void {
+  private playTone(line: 'c' | 'g', duration: number, delay: number): void {
     const context = this.audioContext;
     if (!context || context.state !== 'running' || this.volume() === 0) return;
 
@@ -325,7 +349,7 @@ export class App implements OnDestroy {
     const level = (this.volume() / 100) * 0.16;
 
     oscillator.type = 'sine';
-    oscillator.frequency.value = frequency;
+    oscillator.frequency.value = this.lineFrequency(line);
     const attack = Math.min(0.018, duration * 0.25);
     const release = Math.min(0.09, duration * 0.5);
     gain.gain.setValueAtTime(0, start);
@@ -334,9 +358,12 @@ export class App implements OnDestroy {
     gain.gain.linearRampToValueAtTime(0, start + duration);
     oscillator.connect(gain);
     gain.connect(context.destination);
+    const tone = { oscillator, line };
+    this.activeTones.add(tone);
     oscillator.start(start);
     oscillator.stop(start + duration);
     oscillator.onended = () => {
+      this.activeTones.delete(tone);
       oscillator.disconnect();
       gain.disconnect();
     };
