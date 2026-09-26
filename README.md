@@ -1,59 +1,56 @@
-# KkMusicalNotationVisualizer
+<h1 align="center">KK.MusicalNotationVisualizer</h1>
+<p align="center"><strong>Звуковой визуализатор двух ритмов и фигур Лиссажу</strong></p>
+<p align="center">
+  <img src="https://img.shields.io/badge/Angular-21-DD0031?logo=angular" alt="Angular 21">
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript" alt="TypeScript 5.9">
+  <img src="https://img.shields.io/badge/UI-RU%20%2F%20EN-8B5CF6" alt="Русский и английский языки">
+</p>
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.7.
+![Работающий визуализатор: отношение G:C 3:2 и скорость 262 тика в секунду](docs/images/visualizer-3-2-262.png)
 
-## Development server
+## Идея
 
-To start a local development server, run:
+Шарики движутся по горизонтальной оси C и вертикальной оси G. Их проекции задают положение третьего, «теневого» шарика. Его след показывает фигуру Лиссажу, которая меняется вместе с отношением скоростей двух осей.
 
-```bash
-ng serve
-```
+## Возможности
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- отношение `G:C` от `1:1` до `16:16`: первая цифра управляет вертикальной осью G, вторая — горизонтальной C;
+- скорость от `2` до `512` тиков в секунду с управлением ползунком или числовым полем;
+- звук при прохождении шариков через центральные отметки и регулировка громкости;
+- след теневого шарика, сохраняющий один полный цикл фигуры;
+- переключение интерфейса между русским и английским языками.
 
-## Code scaffolding
+Фигуры при равных числах — окружности. Из-за порядка `G:C` рисунки с разными числами повернуты относительно таблиц, где отношение указано в порядке горизонтальная:вертикальная ось.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Использование
 
-```bash
-ng generate component component-name
-```
+1. Задайте отношение `G:C` и скорость симуляции.
+2. Нажмите **Старт**. Пунктирные линии соединят шарики осей с теневым шариком, а его след постепенно заполнит фигуру.
+3. Настройте громкость во время воспроизведения. Изменение отношения или скорости остановит симуляцию.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Скорость задаёт количество тиков в секунду и темп движения. Высота звуков фиксирована: C — `262 Гц`, G — около `196 Гц`. При редких прохождениях центра слышны отдельные сигналы; при частоте прохождений от `30` раз в секунду соответствующий тон звучит непрерывно. Число `262` в поле скорости само по себе не меняет высоту ноты.
 
-```bash
-ng generate --help
-```
+## Запуск из исходного кода
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Понадобятся Node.js `20.19+` в ветке 20, `22.12+` в ветке 22 либо `24+`, а также npm. В корне репозитория выполните:
 
 ```bash
-ng test
+npm ci
+npm start
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+Откройте `http://localhost:4200/`. Для производственной сборки:
 
 ```bash
-ng e2e
+npm run build
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Готовые файлы находятся в `dist/kk-musical-notation-visualizer/browser/`.
 
-## Additional Resources
+## Лицензии
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Лицензия исходного кода проекта пока не указана: файла `LICENSE` в репозитории нет.
+
+### Лицензия стороннего компонента
+
+Шрифт [Exo 2](public/fonts/Exo2-VariableFont_wght.ttf) — © 2013 The Exo 2 Project Authors, распространяется по [SIL Open Font License 1.1](public/fonts/Exo2-OFL.txt). Текст лицензии и уведомление об авторских правах хранятся рядом со шрифтом в `public/fonts/` и включаются в сборку приложения.
