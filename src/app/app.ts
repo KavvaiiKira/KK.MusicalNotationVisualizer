@@ -7,6 +7,7 @@ const C_FREQUENCY = 262;
 const G_FREQUENCY = C_FREQUENCY * G_TO_C_FREQUENCY_RATIO;
 const SUSTAIN_THRESHOLD = 30;
 const TRAIL_SAMPLES_PER_PERIOD = 256;
+const RATIO_TRANSITION_MS = 220;
 
 function greatestCommonDivisor(first: number, second: number): number {
   while (second !== 0) {
@@ -86,6 +87,7 @@ export class App implements OnDestroy {
   private trailStartGPhase = 0;
   private sustainedCLevel = 0;
   private sustainedGLevel = 0;
+  private ratioTransition?: { start: number; fromC: number; fromG: number };
 
   constructor() {
     document.documentElement.lang = this.locale();
@@ -118,6 +120,8 @@ export class App implements OnDestroy {
 
     this.running.set(false);
     cancelAnimationFrame(this.frameId);
+    this.ratioTransition = undefined;
+    this.updateBallPositions();
     const context = this.audioContext;
     this.audioContext = undefined;
     this.sustainedC = undefined;
@@ -140,16 +144,21 @@ export class App implements OnDestroy {
     const count = Math.min(16, Math.max(1, Math.round(value)));
     const selectedCount = line === 'c' ? this.cCount : this.gCount;
     if (count !== selectedCount()) {
-      const previousOffset = this.cPhaseOffset();
+      const fromC = this.cPosition();
+      const fromG = this.gPosition();
       this.lastFrame = performance.now();
       selectedCount.set(count);
-      this.cPhase += previousOffset - this.cPhaseOffset();
+      this.cPhase = 0;
+      this.gPhase = 0;
       this.playbackTicks = 0;
-      this.trailStartCPhase = this.cPhase;
-      this.trailStartGPhase = this.gPhase;
+      this.trailStartCPhase = 0;
+      this.trailStartGPhase = 0;
       this.trailPath.set('');
+      this.ratioTransition = this.running()
+        ? { start: this.lastFrame, fromC, fromG }
+        : undefined;
+      if (!this.ratioTransition) this.updateBallPositions();
     }
-    this.updateBallPositions();
     if (commit) input.value = String(count);
   }
 
@@ -197,8 +206,22 @@ export class App implements OnDestroy {
 
     this.cPhase = nextCPhase;
     this.gPhase = nextGPhase;
-    this.updateBallPositions();
-    this.updateTrail();
+    const transition = this.ratioTransition;
+    if (transition) {
+      const progress = Math.min(1, (now - transition.start) / RATIO_TRANSITION_MS);
+      const blend = progress * progress * (3 - 2 * progress);
+      this.cPosition.set(transition.fromC + (this.cCoordinate() - transition.fromC) * blend);
+      this.gPosition.set(transition.fromG + (this.gCoordinate() - transition.fromG) * blend);
+      if (progress === 1) {
+        this.ratioTransition = undefined;
+        this.playbackTicks = 0;
+        this.trailStartCPhase = this.cPhase;
+        this.trailStartGPhase = this.gPhase;
+      }
+    } else {
+      this.updateBallPositions();
+      this.updateTrail();
+    }
     this.frameId = requestAnimationFrame(this.animate);
   };
 
@@ -208,8 +231,16 @@ export class App implements OnDestroy {
   }
 
   private updateBallPositions(): void {
-    this.cPosition.set(500 + 280 * Math.sin(Math.PI * (this.cPhase + this.cPhaseOffset())));
-    this.gPosition.set(380 + 280 * Math.sin(Math.PI * this.gPhase));
+    this.cPosition.set(this.cCoordinate());
+    this.gPosition.set(this.gCoordinate());
+  }
+
+  private cCoordinate(): number {
+    return 500 + 280 * Math.sin(Math.PI * (this.cPhase + this.cPhaseOffset()));
+  }
+
+  private gCoordinate(): number {
+    return 380 + 280 * Math.sin(Math.PI * this.gPhase);
   }
 
   private updateTrail(): void {
